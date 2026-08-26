@@ -320,44 +320,40 @@ export default function AdminUsersPage({ user }: { user: SafeUser }) {
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="f-role">角色</Label>
-                  <select
-                    id="f-role"
-                    value={form.role}
-                    disabled={isSelfEdit}
-                    onChange={(e) =>
-                      setForm({ ...form, role: e.target.value as Role })
-                    }
-                    className="border-input bg-muted disabled:pointer-events-none flex h-9 w-full rounded-md border px-3 text-sm"
-                  >
-                    <option value="admin">管理员</option>
-                    <option value="super_admin">系统管理员</option>
-                  </select>
-                </div>
-                {editing && (
+              {/* 编辑自己时，隐藏角色和状态，不允许修改 */}
+              {!isSelfEdit && (
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="f-status">状态</Label>
+                    <Label htmlFor="f-role">角色</Label>
                     <select
-                      id="f-status"
-                      value={form.status}
-                      disabled={isSelfEdit}
+                      id="f-role"
+                      value={form.role}
                       onChange={(e) =>
-                        setForm({ ...form, status: e.target.value as Status })
+                        setForm({ ...form, role: e.target.value as Role })
                       }
-                      className="border-input bg-muted disabled:pointer-events-none flex h-9 w-full rounded-md border px-3 text-sm"
+                      className="border-input bg-transparent flex h-9 w-full rounded-md border px-3 text-sm"
                     >
-                      <option value="active">启用</option>
-                      <option value="disabled">停用</option>
+                      <option value="admin">管理员</option>
+                      <option value="super_admin">系统管理员</option>
                     </select>
                   </div>
-                )}
-              </div>
-              {isSelfEdit && (
-                <p className="text-muted-foreground text-xs">
-                  你正在编辑自己，角色和状态不可修改。
-                </p>
+                  {editing && (
+                    <div className="space-y-2">
+                      <Label htmlFor="f-status">状态</Label>
+                      <select
+                        id="f-status"
+                        value={form.status}
+                        onChange={(e) =>
+                          setForm({ ...form, status: e.target.value as Status })
+                        }
+                        className="border-input bg-transparent flex h-9 w-full rounded-md border px-3 text-sm"
+                      >
+                        <option value="active">启用</option>
+                        <option value="disabled">停用</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
               )}
               {error && <p className="text-destructive text-sm">{error}</p>}
             </div>
