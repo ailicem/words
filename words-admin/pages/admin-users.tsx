@@ -81,6 +81,9 @@ export default function AdminUsersPage({ user }: { user: SafeUser }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // 是否正在编辑当前登录的系统管理员：其状态和角色不允许修改
+  const isSelfEdit = editing && form.id === user.id;
+
   const load = useCallback(async () => {
     setLoading(true);
     const res = await fetch("/api/admin-users");
@@ -127,15 +130,19 @@ export default function AdminUsersPage({ user }: { user: SafeUser }) {
     try {
       let res: Response;
       if (editing) {
+        const body: Record<string, unknown> = {
+          name: form.name,
+          password: form.password || undefined,
+        };
+        // 编辑自己时不允许修改状态和角色
+        if (!isSelfEdit) {
+          body.role = form.role;
+          body.status = form.status;
+        }
         res = await fetch(`/api/admin-users/${form.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: form.name,
-            role: form.role,
-            status: form.status,
-            password: form.password || undefined,
-          }),
+          body: JSON.stringify(body),
         });
       } else {
         if (!form.password) {
@@ -319,10 +326,11 @@ export default function AdminUsersPage({ user }: { user: SafeUser }) {
                   <select
                     id="f-role"
                     value={form.role}
+                    disabled={isSelfEdit}
                     onChange={(e) =>
                       setForm({ ...form, role: e.target.value as Role })
                     }
-                    className="border-input bg-transparent flex h-9 w-full rounded-md border px-3 text-sm"
+                    className="border-input bg-muted disabled:pointer-events-none flex h-9 w-full rounded-md border px-3 text-sm"
                   >
                     <option value="admin">管理员</option>
                     <option value="super_admin">系统管理员</option>
@@ -334,10 +342,11 @@ export default function AdminUsersPage({ user }: { user: SafeUser }) {
                     <select
                       id="f-status"
                       value={form.status}
+                      disabled={isSelfEdit}
                       onChange={(e) =>
                         setForm({ ...form, status: e.target.value as Status })
                       }
-                      className="border-input bg-transparent flex h-9 w-full rounded-md border px-3 text-sm"
+                      className="border-input bg-muted disabled:pointer-events-none flex h-9 w-full rounded-md border px-3 text-sm"
                     >
                       <option value="active">启用</option>
                       <option value="disabled">停用</option>
@@ -345,6 +354,11 @@ export default function AdminUsersPage({ user }: { user: SafeUser }) {
                   </div>
                 )}
               </div>
+              {isSelfEdit && (
+                <p className="text-muted-foreground text-xs">
+                  你正在编辑自己，角色和状态不可修改。
+                </p>
+              )}
               {error && <p className="text-destructive text-sm">{error}</p>}
             </div>
             <DialogFooter className="pt-2">

@@ -33,6 +33,13 @@ export default async function handler(
     }
     const current = target[0];
 
+    // 不允许修改自己的状态或角色
+    if (id === user.id && (role || nextStatus)) {
+      return res
+        .status(400)
+        .json({ message: "不能修改自己的状态或角色" });
+    }
+
     if (role && role !== "super_admin" && role !== "admin") {
       return res.status(400).json({ message: "无效的角色" });
     }
