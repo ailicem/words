@@ -1,14 +1,24 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { GetServerSideProps } from "next";
 import { BookOpen, Loader2 } from "lucide-react";
-import { getUser, setSession } from "@/lib/auth";
+import { getSessionUser, hasAnyAdmin } from "@/lib/server/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const sessionUser = await getSessionUser(ctx.req);
+  if (sessionUser) {
+    return { redirect: { destination: "/books", permanent: false } };
+  }
+  // 已有管理员则不允许二次注册系统管理员
+  if (await hasAnyAdmin()) {
+    return { redirect: { destination: "/signin", permanent: false } };
+  }
+  return { props: {} };
+};
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -19,14 +29,9 @@ export default function SignUpPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (getUser()) router.replace("/books");
-  }, [router]);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!name.trim() || !email.trim() || !password.trim() || !confirm.trim()) {
+    if (!name.trim() || !email.trim() || !password || !confirm) {
       setError("请填写所有字段");
       return;
     }
@@ -38,14 +43,25 @@ export default function SignUpPage() {
       setError("密码长度至少为 6 位");
       return;
     }
-
     setSubmitting(true);
     setError("");
-    // demo：本地模拟注册，注册成功即自动登录
-    setTimeout(() => {
-      setSession({ name: name.trim(), email: email.trim() });
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message ?? "注册失败");
+        return;
+      }
       router.replace("/books");
-    }, 400);
+    } catch {
+      setError("网络错误，请重试");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -55,9 +71,9 @@ export default function SignUpPage() {
           <div className="bg-primary flex size-12 items-center justify-center rounded-xl">
             <BookOpen className="text-primary-foreground size-6" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">创建管理员账号</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">初始化系统管理员</h1>
           <p className="text-muted-foreground text-sm">
-            注册系统管理员账号以进入后台
+            注册首个系统管理员账号以初始化系统
           </p>
         </div>
 
@@ -65,7 +81,7 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit}>
             <CardHeader>
               <CardTitle>注册</CardTitle>
-              <CardDescription>填写以下信息完成管理员注册</CardDescription>
+              <CardDescription>此账号将成为系统管理员，拥有全部权限</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -113,17 +129,11 @@ export default function SignUpPage() {
               </div>
               {error && <p className="text-destructive text-sm">{error}</p>}
             </CardContent>
-            <CardFooter className="flex flex-col gap-3">
+            <CardFooter>
               <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting && <Loader2 className="size-4 animate-spin" />}
-                注册
+                注册并进入系统
               </Button>
-              <p className="text-muted-foreground text-center text-sm">
-                已有账号？{" "}
-                <Link href="/signin" className="text-primary font-medium hover:underline">
-                  登录
-                </Link>
-              </p>
             </CardFooter>
           </form>
         </Card>

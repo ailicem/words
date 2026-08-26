@@ -1,15 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { BookOpen, LogOut, Users } from "lucide-react";
-import type { User } from "@/lib/auth";
+import type { SafeUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  superOnly?: boolean;
+};
+
+const navItems: NavItem[] = [
   { href: "/books", label: "单词书管理", icon: BookOpen },
-  { href: "/admin-users", label: "管理员管理", icon: Users },
+  { href: "/admin-users", label: "管理员管理", icon: Users, superOnly: true },
 ];
 
 function initials(name: string, email: string) {
@@ -17,12 +24,14 @@ function initials(name: string, email: string) {
   return source.slice(0, 1).toUpperCase();
 }
 
-export function AppSidebar({ user }: { user: User }) {
+export function AppSidebar({ user }: { user: SafeUser }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem("words-admin-user");
+  const items = navItems.filter((item) => !item.superOnly || user.role === "super_admin");
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/signin");
   };
 
@@ -36,7 +45,7 @@ export function AppSidebar({ user }: { user: User }) {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
           return (

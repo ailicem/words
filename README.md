@@ -38,3 +38,33 @@ github 高星的 单词资料库
 - 目录在 components/ui 目录下
 
 ## supabase
+
+
+
+**Conventional Commit** 
+
+## 数据库supabase 已云端创建
+.env DATABASE_URL
+- next.js 面向对象编程 Object  高级
+  不同国家的人 翻译
+  User   user.save() -> sql insert into
+  drizzle orm 映射 翻译
+  psql User Table 低级 sql 
+- drizzle 接手数据库 .env
+  不需要建表，建立 schema 映射的就是数据表
+  migrate 数据表迁移 
+
+## drizzle 
+ORM 工具 一种，有一系列的包和命令
+- db 目录
+  - index.ts 数据库配置
+  链接并返回 数据库操作句柄
+  - schema.ts
+  对象定义数据表结构
+- 配套一系列的脚本
+  - generate 生成数据库迁移文件
+    数据表加表，改字段，添加索引等
+    多一个schema 文件
+  - migrate 数据库迁移
+  - push 数据库推送
+  - studio 数据库可视化工具

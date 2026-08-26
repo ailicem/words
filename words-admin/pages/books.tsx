@@ -1,7 +1,8 @@
-"use client";
-
 import { useState } from "react";
+import type { GetServerSideProps } from "next";
 import { Plus, Search } from "lucide-react";
+import type { SafeUser } from "@/lib/types";
+import { sanitizeUser, getSessionUser } from "@/lib/server/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +42,15 @@ const levelColors: Record<Book["level"], "secondary" | "default" | "outline"> = 
   考研: "default",
 };
 
-export default function BooksPage() {
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const sessionUser = await getSessionUser(ctx.req);
+  if (!sessionUser) {
+    return { redirect: { destination: "/signin", permanent: false } };
+  }
+  return { props: { user: sanitizeUser(sessionUser) } };
+};
+
+export default function BooksPage({ user }: { user: SafeUser }) {
   const [books, setBooks] = useState<Book[]>(initialBooks);
   const [query, setQuery] = useState("");
 
@@ -50,7 +59,7 @@ export default function BooksPage() {
   );
 
   return (
-    <AdminLayout>
+    <AdminLayout user={user}>
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>

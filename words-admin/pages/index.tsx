@@ -1,21 +1,20 @@
-"use client";
+import type { GetServerSideProps } from "next";
+import { getSessionUser, hasAnyAdmin } from "@/lib/server/auth";
 
-import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { getUser } from "@/lib/auth";
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const sessionUser = await getSessionUser(ctx.req);
+  if (sessionUser) {
+    return { redirect: { destination: "/books", permanent: false } };
+  }
+  const hasAdmin = await hasAnyAdmin();
+  return {
+    redirect: {
+      destination: hasAdmin ? "/signin" : "/signup",
+      permanent: false,
+    },
+  };
+};
 
-export default function Home() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const user = getUser();
-    router.replace(user ? "/books" : "/signin");
-  }, [router]);
-
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Loader2 className="text-muted-foreground size-6 animate-spin" />
-    </div>
-  );
+export default function IndexPage() {
+  return null;
 }
