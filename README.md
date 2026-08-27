@@ -115,3 +115,20 @@ ai 生产一个script 脚本，本地运行
 - 规则或规范，表单字段，业务场景，功能描述
   详细表达，不能让llm 去猜
 - llm 擅长的，比如生成代码，让它自己去跑
+
+## 多端
+- PC 端
+
+- h5 手机网页端
+  手机端适配
+  - android
+  - ios
+  React Native/flutter
+- 桌面端
+  C/S架构 electron
+
+## h5 web应用
+- nextjs
+  不用从0开始开发
+- clear/compact 上下文
+  新项目重新启动新的对话窗口

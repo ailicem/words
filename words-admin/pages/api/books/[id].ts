@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { books, words } from "@/lib/db/schema";
+import { books } from "@/lib/db/schema";
 import { getSessionUser } from "@/lib/server/auth";
 import { sanitizeBook } from "./index";
 
@@ -68,20 +68,16 @@ export default async function handler(
 
   if (req.method === "DELETE") {
     const target = await db
-      .select()
+      .select({ id: books.id })
       .from(books)
       .where(eq(books.id, id))
       .limit(1);
     if (target.length === 0) {
       return res.status(404).json({ message: "单词书不存在" });
     }
-    const bookId = target[0].bookId;
 
-    // 原子删除：先删除该单词书下的所有单词，再删除单词书本身
-    await db.transaction(async (tx) => {
-      await tx.delete(words).where(eq(words.bookId, bookId));
-      await tx.delete(books).where(eq(books.id, id));
-    });
+    // 删除图书；words 表通过 bookId 外键 onDelete cascade，同图书的单词一并删除
+    await db.delete(books).where(eq(books.id, id));
 
     return res.status(200).json({ message: "删除成功" });
   }
