@@ -56,3 +56,22 @@ export const words = pgTable("words", {
 
 export type Word = typeof words.$inferSelect;
 export type NewWord = typeof words.$inferInsert;
+
+// 单词书表
+export const books = pgTable("books", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  // 单词数量
+  wordCount: integer("word_count").notNull().default(0),
+  // 封面图 URL
+  coverUrl: text("cover_url"),
+  // 通过 bookId 与 words 表关联（如 PEPXiaoXue3_1）
+  bookId: text("book_id").notNull().unique(),
+  // 标签，逗号分隔存储
+  tags: text("tags"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Book = typeof books.$inferSelect;
+export type NewBook = typeof books.$inferInsert;
