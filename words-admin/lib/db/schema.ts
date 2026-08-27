@@ -1,5 +1,7 @@
 import {
+  bigint,
   integer,
+  json,
   pgEnum,
   pgTable,
   serial,
@@ -40,3 +42,17 @@ export const adminSessions = pgTable("admin_sessions", {
 
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type AdminSession = typeof adminSessions.$inferSelect;
+
+// 单词表（对应 Supabase 中手动创建的 public.words）
+export const words = pgTable("words", {
+  // identity 主键，drizzle 不参与默认值生成
+  id: bigint("id", { mode: "number" }).primaryKey(),
+  wordRank: integer("wordRank"),
+  headWord: text("headWord"),
+  // 单词的完整释义内容，以 json 保存
+  content: json("content"),
+  bookId: text("bookId"),
+});
+
+export type Word = typeof words.$inferSelect;
+export type NewWord = typeof words.$inferInsert;
